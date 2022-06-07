@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Switch
 import androidx.appcompat.app.AppCompatActivity
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -57,7 +56,7 @@ open class FlutterViewActivity : AppCompatActivity() {
                     Log.d("FlutterTest", "Received data : $data")
                     when (route) {
                         "testimonial" ->{
-                            val intent = Intent(this, TestimonialActivity::class.java)
+                            val intent = Intent(this, StandaloneFlutterView::class.java)
                             intent.putExtra("name", data["name"].toString())
                             intent.putExtra("age", data["age"].toString())
                             startActivity(intent)

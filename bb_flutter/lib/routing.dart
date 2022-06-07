@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bb_flutter/my_navigator_observer.dart';
 import 'package:bb_flutter/profile_form.dart';
 import 'package:bb_flutter/settings.dart';
 import 'package:flutter/services.dart';
@@ -35,42 +36,46 @@ class Routing extends StatelessWidget {
         print("route = $route");
         final args = jsonDecode(jData['args'].toString());
         print("args = $args");
+        //Navigator.of(mcontext!).pop();
+        print("Default route : ${Navigator.defaultRouteName}");
+        print("Navigator stack: ${Navigator.canPop(mcontext!)}");
         Navigator.of(mcontext!).pop();
         switch (route) {
           case 'profile_form':
-            Navigator.pushReplacement(
+            Navigator.push(
               mcontext!,
               MaterialPageRoute(
                 builder: (context) => Profile(usertype: args['usertype']),
               ),
             );
-            //Navigator.of(mcontext!).pop();
             break;
           case 'single_testimonial':
-            Navigator.pushReplacement(
+            Navigator.push(
               mcontext!,
               MaterialPageRoute(
-                builder: (context) => SingleTestimonial(name: args['name'], msg: args['msg'],),
+                builder: (context) => SingleTestimonial(
+                  name: args['name'],
+                  msg: args['msg'],
+                ),
               ),
             );
-            //Navigator.of(mcontext!).pop();
             break;
           case 'settings':
-            Navigator.pushReplacement(
+            Navigator.push(
               mcontext!,
               MaterialPageRoute(
                 builder: (context) => Settings(),
               ),
             );
-            //Navigator.of(mcontext!).pop();
             break;
           default:
-            Navigator.pushReplacement(
+            /*Navigator.push(
               mcontext!,
               MaterialPageRoute(
                 builder: (context) => Profile(usertype: args['usertype']),
               ),
-            );
+            );*/
+            print('RouteLog: No route type found');
         }
       }
     } on PlatformException catch (e) {
@@ -81,8 +86,20 @@ class Routing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("build of Routing");
     mcontext = context;
-    return Container();
+    print("Pushed routing screen");
+    return WillPopScope(
+      onWillPop: () {
+        if (Navigator.canPop(mcontext!)) {
+          print("popping something");
+          Navigator.pop(mcontext!);
+        } else {
+          SystemNavigator.pop();
+        }
+        print("Popping routing screen");
+        return Future.value(true);
+      },
+      child: Container(),
+    );
   }
 }

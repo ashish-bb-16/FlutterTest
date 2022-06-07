@@ -14,7 +14,6 @@
             <option value="$PROJECT_DIR$/bb_flutter/.android/Flutter" />
           </set>
         </option>
-        <option name="resolveModulePerSourceSet" value="false" />
       </GradleProjectSettings>
     </option>
   </component>
