@@ -17,16 +17,25 @@ import kotlin.collections.HashMap
 //To optimise the performance, we could try calculating the number of flutter views from the recycler view
 // and attach their engine to activity before initialising the adapter
 
-class ListAdapter(context: Context, private val activity: ComponentActivity, private val items: List<Item>): RecyclerView.Adapter<ListAdapter.CellViewHolder>(), EngineBindingsDelegate {
+class ListAdapter(
+    context: Context,
+    private val activity: ComponentActivity,
+    private val items: List<Item>
+) : RecyclerView.Adapter<ListAdapter.CellViewHolder>(), EngineBindingsDelegate {
     private val viewBinding: EngineBindings by lazy {
         EngineBindings(activity = context as Activity, delegate = this, entrypoint = "showCell")
     }
+
     // Save the previous cells determined to be Flutter cells to avoid a confusing visual effect
     // that the Flutter cells change position when scrolling back.
     var previousFlutterCells = TreeSet<Int>()
     var engineMap = HashMap<Int, FlutterViewEngine>()
+    private lateinit var engineHandler: EngineHandler
 
-    private val matchParentLayout = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+    private val matchParentLayout = ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
+    )
 
     //private val flutterView = FlutterView(context)
     //private val flutterChannel = MethodChannel(flutterViewEngine.engine.dartExecutor, "my_cell")
@@ -34,8 +43,8 @@ class ListAdapter(context: Context, private val activity: ComponentActivity, pri
     private var viewHolder: CellViewHolder? = null
     private var engineCounter: Int = 0
 
-    inner class CellViewHolder(val binding: AdapterItemBinding) : RecyclerView.ViewHolder(binding.root) {
-
+    inner class CellViewHolder(val binding: AdapterItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CellViewHolder {
@@ -53,7 +62,6 @@ class ListAdapter(context: Context, private val activity: ComponentActivity, pri
         // While scrolling backward, let it be deterministic, and only show cells that were
         // previously Flutter cells as Flutter cells.
         if (previousFlutterCells.contains(position) || item.isFlutter) {
-            Log.d("ItemTest", "Printing flutter view")
             // If we're restoring a cell at a previous location, the current cell may not have
             // recycled yet since that JVM timing is Nondeterministic. Yank it from the current one.
             //
@@ -72,6 +80,7 @@ class ListAdapter(context: Context, private val activity: ComponentActivity, pri
             //holder.binding.root.addView(flutterView, matchParentLayout)
             holder.binding.androidCard.visibility = View.GONE
             holder.binding.flutterView.visibility = View.VISIBLE
+            holder.binding.flutterView.tag = "Item $position"
 
             // Keep track of the cell so we know which one to restore back to the "Android cell"
             // state when the view gets recycled.
@@ -80,21 +89,25 @@ class ListAdapter(context: Context, private val activity: ComponentActivity, pri
             // again when scrolling back to this position.
             previousFlutterCells.add(position)
 
-            if (!engineMap.containsKey(position)) {
+            /*if (!engineMap.containsKey(position)) {
                 val engine = FlutterViewEngine(viewBinding.engine)
                 engine.attachToActivity(activity)
                 engineMap[position] = engine
-            }
+            }*/
 
-            FlutterEngineCache.getInstance().put(position.toString(), viewBinding.engine)
+            FlutterEngineCache.getInstance().put(position.toString(), item.engine?.engine)
             // This is what makes the Flutter cell start rendering.
-            engineMap[position]?.attachFlutterView(holder.binding.flutterView)
+            item.engine?.attachFlutterView(holder.binding.flutterView)
+            Log.d(
+                "ItemTest",
+                "Flutter view engineId: ${holder.binding.flutterView.isAttachedToFlutterEngine} ${holder.binding.flutterView.tag}"
+            )
             // Tell Flutter which index it's at so Flutter could show the cell number too in its
             // own widget tree.
-            val flutterChannel = MethodChannel(engineMap[position]?.engine?.dartExecutor, "my_cell")
+            val flutterChannel =
+                MethodChannel(item.engine?.engine?.dartExecutor!!, "my_cell")
             flutterChannel.invokeMethod("setCellData", position)
         } else {
-            Log.d("ItemTest", "Printing Android view")
             // If it's not selected as a Flutter cell, just show the Android card.
             holder.binding.androidCard.visibility = View.VISIBLE
             holder.binding.flutterView.visibility = View.GONE
@@ -103,7 +116,7 @@ class ListAdapter(context: Context, private val activity: ComponentActivity, pri
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when(items[position].isFlutter) {
+        return when (items[position].isFlutter) {
             true -> 1
             else -> 0
         }
@@ -112,20 +125,29 @@ class ListAdapter(context: Context, private val activity: ComponentActivity, pri
     override fun getItemCount() = items.size
 
     override fun onViewRecycled(cell: CellViewHolder) {
-        val item = items[cell.adapterPosition]
+        /*val item = items[cell.adapterPosition]
         if (item.isFlutter) {
-            engineMap[cell.adapterPosition]?.detachFlutterView()
-            engineMap[cell.adapterPosition]?.detachActivity()
-            engineMap.remove(cell.adapterPosition)
+            Log.d("ItemTest", "Item at position ${cell.adapterPosition} is being recycled")
+            item.engine?.detachFlutterView()
+            item.engine?.detachActivity()
+            //engineMap.remove(cell.adapterPosition)
             FlutterEngineCache.getInstance().remove(cell.adapterPosition.toString())
+            Log.d(
+                "ItemTest",
+                "Engine at position ${cell.adapterPosition} is ${engineMap.containsKey(cell.adapterPosition)}"
+            )
             viewHolder = null
-        }
+        }*/
         super.onViewRecycled(cell)
     }
 
-    data class Item(val text: String, val isFlutter: Boolean, val position: Int)
+    data class Item(val text: String, val isFlutter: Boolean, val position: Int, val engine: FlutterViewEngine?)
 
     override fun onNext() {
         TODO("Not yet implemented")
+    }
+
+    interface EngineHandler {
+        fun onEngineCreated(position: Int, flutterViewEngine: FlutterViewEngine)
     }
 }

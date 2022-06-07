@@ -18,7 +18,6 @@ class Cell extends StatefulWidget {
 }
 
 class _CellState extends State<Cell> with WidgetsBindingObserver {
-
   int cellNumber = 0;
   String cellText = "";
   Random? _random;
@@ -36,13 +35,13 @@ class _CellState extends State<Cell> with WidgetsBindingObserver {
       }
     });
     // Keep track of what the current platform lifecycle state is.
-    WidgetsBinding.instance?.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -88,7 +87,7 @@ class _CellState extends State<Cell> with WidgetsBindingObserver {
                         Text(
                           // Show a number provided by the platform based on
                           // the cell's index.
-                          "*Flutter*",
+                          "*Flutter $cellNumber*",
                           style: Theme.of(context).textTheme.headline3,
                         ),
                       ],

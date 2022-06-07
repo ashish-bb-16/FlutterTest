@@ -2,6 +2,7 @@ package com.example.fluttertest
 
 import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
@@ -9,6 +10,7 @@ import androidx.lifecycle.OnLifecycleEvent
 import io.flutter.embedding.android.ExclusiveAppComponent
 import io.flutter.embedding.android.FlutterView
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.renderer.FlutterUiDisplayListener
 import io.flutter.plugin.platform.PlatformPlugin
 
 /**
@@ -50,6 +52,7 @@ class FlutterViewEngine(val engine: FlutterEngine) : LifecycleObserver {
      */
     private fun hookActivityAndView() {
         // Assert state.
+        Log.d("ItemTest", "Attaching Flutter View and Activity: ${flutterView?.tag}")
         activity!!.let { activity ->
             flutterView!!.let { flutterView ->
                 platformPlugin = PlatformPlugin(activity, engine.platformChannel)
@@ -75,6 +78,7 @@ class FlutterViewEngine(val engine: FlutterEngine) : LifecycleObserver {
      * [FlutterView].
      */
     private fun unhookActivityAndView() {
+        Log.d("ItemTest", "Unhooking activity and view")
         // Stop reacting to activity events.
         activity!!.lifecycle.removeObserver(this)
 
@@ -138,6 +142,16 @@ class FlutterViewEngine(val engine: FlutterEngine) : LifecycleObserver {
         if (activity != null) {
             hookActivityAndView()
         }
+        flutterView.addOnFirstFrameRenderedListener(object: FlutterUiDisplayListener{
+            override fun onFlutterUiDisplayed() {
+                Log.d("ItemTest", "Flutter Ui Displayed: ${flutterView.tag}")
+            }
+
+            override fun onFlutterUiNoLongerDisplayed() {
+                Log.d("ItemTest", "Flutter Ui No longer Displayed: ${flutterView.tag}")
+            }
+
+        })
     }
 
     /**

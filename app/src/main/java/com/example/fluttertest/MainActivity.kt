@@ -7,12 +7,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fluttertest.databinding.ActivityMainBinding
 import io.flutter.FlutterInjector
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineGroup
 import io.flutter.embedding.engine.dart.DartExecutor
 import java.util.*
 
-class MainActivity : FlutterViewActivity(), DataModelObserver {
+class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDelegate {
     private lateinit var binding: ActivityMainBinding
     private lateinit var flutterViewEngine: FlutterViewEngine
+    private lateinit var flutterEngineGroup: FlutterEngineGroup
+    private val viewBinding: EngineBindings by lazy {
+        EngineBindings(activity = this, delegate = this, entrypoint = "showCell")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +30,7 @@ class MainActivity : FlutterViewActivity(), DataModelObserver {
             DartExecutor.DartEntrypoint(
                 FlutterInjector.instance().flutterLoader().findAppBundlePath(),
                 "showCell"))
+        flutterEngineGroup = FlutterEngineGroup(this)
 
         binding.button.setOnClickListener {
             startActivity(Intent(this, StandaloneFlutterView::class.java))
@@ -36,9 +42,19 @@ class MainActivity : FlutterViewActivity(), DataModelObserver {
         // view is also scrolled into the screen.
         //flutterViewEngine.attachToActivity(this)
 
+
+        val items = getList()
+
+        items.forEach {
+            with(it) {
+                it.engine?.let { it1 ->
+                    it1.attachToActivity(this@MainActivity)
+                }
+            }
+        }
         val layoutManager = LinearLayoutManager(this)
         val recyclerView = binding.recyclerView
-        val adapter = ListAdapter(this, this, getList())
+        val adapter = ListAdapter(this, this, items)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
 
@@ -101,15 +117,22 @@ class MainActivity : FlutterViewActivity(), DataModelObserver {
 
         for (i in 0..200) {
             if (random.nextInt(3) == 0) {
-                list.add(ListAdapter.Item("Flutter $i", true, i))
+                val engine = flutterEngineGroup.createAndRunEngine(this, DartExecutor.DartEntrypoint(
+                    FlutterInjector.instance().flutterLoader().findAppBundlePath(),
+                    "showCell"))
+                list.add(ListAdapter.Item("Flutter $i", true, i, FlutterViewEngine(engine)))
             } else {
-                list.add(ListAdapter.Item("Android $i", false, i))
+                list.add(ListAdapter.Item("Android $i", false, i, null))
             }
         }
         return list
     }
 
     override fun onCountUpdate(newCount: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onNext() {
         TODO("Not yet implemented")
     }
 }
