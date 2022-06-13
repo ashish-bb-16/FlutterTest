@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:sensors/sensors.dart';
 
 // This is on alternate entrypoint for this module to display Flutter UI in
 // a (multi-)view integration scenario.
@@ -72,7 +71,7 @@ class _CellState extends State<Cell> with WidgetsBindingObserver {
           builder: (context) {
             return Card(
               // Mimic the platform Material look.
-              margin: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
+              margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
