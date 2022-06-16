@@ -20,7 +20,8 @@ import kotlin.collections.HashMap
 class ListAdapter(
     context: Context,
     private val activity: ComponentActivity,
-    private val items: List<Item>
+    private val items: MutableList<Item>,
+    private val availableFlutterEngines: Queue<FlutterViewEngine>
 ) : RecyclerView.Adapter<ListAdapter.CellViewHolder>(), EngineBindingsDelegate {
     private val viewBinding: EngineBindings by lazy {
         EngineBindings(activity = context as Activity, delegate = this, entrypoint = "showCell")
@@ -45,6 +46,12 @@ class ListAdapter(
 
     inner class CellViewHolder(val binding: AdapterItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
+    }
+
+    fun setItems(items: List<Item>) {
+        this.items.clear()
+        this.items.addAll(items)
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CellViewHolder {
@@ -95,6 +102,10 @@ class ListAdapter(
                 engineMap[position] = engine
             }*/
 
+            if (item.engine == null) {
+                item.engine = availableFlutterEngines.poll()
+            }
+
             FlutterEngineCache.getInstance().put(position.toString(), item.engine?.engine)
             // This is what makes the Flutter cell start rendering.
             item.engine?.attachFlutterView(holder.binding.flutterView)
@@ -125,11 +136,13 @@ class ListAdapter(
     override fun getItemCount() = items.size
 
     override fun onViewRecycled(cell: CellViewHolder) {
-        /*val item = items[cell.adapterPosition]
+        val item = items[cell.adapterPosition]
         if (item.isFlutter) {
             Log.d("ItemTest", "Item at position ${cell.adapterPosition} is being recycled")
             item.engine?.detachFlutterView()
-            item.engine?.detachActivity()
+            availableFlutterEngines.add(item.engine)
+            item.engine = null
+            //item.engine?.detachActivity()
             //engineMap.remove(cell.adapterPosition)
             FlutterEngineCache.getInstance().remove(cell.adapterPosition.toString())
             Log.d(
@@ -137,11 +150,11 @@ class ListAdapter(
                 "Engine at position ${cell.adapterPosition} is ${engineMap.containsKey(cell.adapterPosition)}"
             )
             viewHolder = null
-        }*/
+        }
         super.onViewRecycled(cell)
     }
 
-    data class Item(val text: String, val isFlutter: Boolean, val position: Int, val engine: FlutterViewEngine?)
+    data class Item(val text: String, val isFlutter: Boolean, val position: Int, var engine: FlutterViewEngine?)
 
     override fun onNext() {
         TODO("Not yet implemented")
@@ -149,5 +162,7 @@ class ListAdapter(
 
     interface EngineHandler {
         fun onEngineCreated(position: Int, flutterViewEngine: FlutterViewEngine)
+
+        fun onCreateEngine(position: Int, dartEntrypointName: String): FlutterViewEngine
     }
 }

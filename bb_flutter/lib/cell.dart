@@ -1,7 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:developer' as dev;
+import 'dart:math';
 
 // This is on alternate entrypoint for this module to display Flutter UI in
 // a (multi-)view integration scenario.
@@ -19,6 +19,7 @@ class Cell extends StatefulWidget {
 class _CellState extends State<Cell> with WidgetsBindingObserver {
   int cellNumber = 0;
   String cellText = "";
+  int clickCounter = 0;
   Random? _random;
   AppLifecycleState? appLifecycleState;
 
@@ -69,32 +70,40 @@ class _CellState extends State<Cell> with WidgetsBindingObserver {
         color: Colors.white,
         child: Builder(
           builder: (context) {
-            return Card(
-              // Mimic the platform Material look.
-              margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 16,
-              color: randomLightColor(),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          // Show a number provided by the platform based on
-                          // the cell's index.
-                          "*Flutter $cellNumber*",
-                          style: Theme.of(context).textTheme.headline3,
-                        ),
-                      ],
-                    ),
+            return GestureDetector(
+                onTap: (() {
+                  setState(() {
+                    clickCounter++;
+                  });
+                }),
+                child: Card(
+                  // Mimic the platform Material look.
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
-              ),
-            );
+                  elevation: 16,
+                  color: randomLightColor(),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              // Show a number provided by the platform based on
+                              // the cell's index.
+                              "*Flutter $cellNumber*",
+                              style: Theme.of(context).textTheme.headline3,
+                            ),
+                            Text("Clicked $clickCounter times")
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ));
           },
         ),
       ),
