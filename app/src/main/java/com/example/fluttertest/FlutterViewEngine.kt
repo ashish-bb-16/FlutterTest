@@ -8,7 +8,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import io.flutter.embedding.android.ExclusiveAppComponent
-import io.flutter.embedding.android.FlutterView
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.renderer.FlutterUiDisplayListener
 import io.flutter.plugin.platform.PlatformPlugin
@@ -42,7 +41,7 @@ import io.flutter.plugin.platform.PlatformPlugin
  */
 class FlutterViewEngine(val engine: FlutterEngine) : LifecycleObserver {
 
-    private var flutterView: FlutterView? = null
+    private var flutterView: MyFlutterView? = null
     private var activity: ComponentActivity? = null
     private var platformPlugin: PlatformPlugin? = null
 
@@ -137,7 +136,7 @@ class FlutterViewEngine(val engine: FlutterEngine) : LifecycleObserver {
      * lifecycle to pause rendering when the activity is put into the background while the
      * view is still attached to the view hierarchy.
      */
-    fun attachFlutterView(flutterView: FlutterView) {
+    fun attachFlutterView(flutterView: MyFlutterView) {
         this.flutterView = flutterView
         if (activity != null) {
             hookActivityAndView()

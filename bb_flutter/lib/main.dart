@@ -12,15 +12,7 @@ void main() {
   // This call ensures the Flutter binding has been set up before creating the
   // MethodChannel-based model.
   WidgetsFlutterBinding.ensureInitialized();
-
-  final model = CounterModel();
-
-  runApp(
-    ChangeNotifierProvider.value(
-      value: model,
-      child: const MyApp(),
-    ),
-  );
+  runApp(const Cell());
 }
 
 /// This is on alternate entrypoint for this module to display Flutter UI in

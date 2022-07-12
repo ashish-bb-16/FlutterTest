@@ -17,11 +17,18 @@ import java.util.*
 class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDelegate,
     ListAdapter.EngineHandler {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var flutterViewEngine: FlutterViewEngine
-    private lateinit var flutterEngineGroup: FlutterEngineGroup
     private lateinit var initialEngine: FlutterEngine
     private lateinit var adapter: ListAdapter
-    private val availableFlutterEngines: Queue<FlutterViewEngine> = LinkedList()
+    private val imageList = a(
+        "https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6ff92caffcdd63681a35134a6770ed3b&auto=format&fit=crop&w=1951&q=80",
+        "https://images.unsplash.com/photo-1522205408450-add114ad53fe?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=368f45b0888aeb0b7b08e3a1084d3ede&auto=format&fit=crop&w=1950&q=80",
+        "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=94a1e718d89ca60a6337a6008341ca50&auto=format&fit=crop&w=1950&q=80",
+        "https://images.unsplash.com/photo-1523205771623-e0faa4d2813d?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=89719a0d55dd05e2deae4120227e6efc&auto=format&fit=crop&w=1953&q=80",
+        "https://images.unsplash.com/photo-1508704019882-f9cf40e475b4?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=8c6e5e3aba713b17aa1fe71ab4f0ae5b&auto=format&fit=crop&w=1352&q=80",
+        "https://images.unsplash.com/photo-1519985176271-adb1088fa94c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=a0c8d632e977f94e5d312d9893258f59&auto=format&fit=crop&w=1355&q=80"
+    )
+
+    private fun <T> a(vararg items: T) = arrayListOf(*items)
 
     private val viewBinding: EngineBindings by lazy {
         EngineBindings(activity = this, delegate = this, entrypoint = "showCell")
@@ -32,7 +39,6 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         DataModel.instance.addObserver(this)
-        flutterEngineGroup = FlutterEngineGroup(this)
 
         /* val engine = FlutterEngine(applicationContext)
          engine.dartExecutor.executeDartEntrypoint(
@@ -51,19 +57,15 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
          )*/
 
         val init = System.currentTimeMillis()
-        for (i in 0..100) {
-            val engine1 = FlutterViewEngine(
-                flutterEngineGroup.createAndRunEngine(
-                    this, DartExecutor.DartEntrypoint(
-                        FlutterInjector.instance().flutterLoader().findAppBundlePath(),
-                        "showCell"
-                    )
-                )
-            )
+        for (i in 0..6) {
+            val engine1 = EngineManager.createViewEngine(this)
             engine1.attachToActivity(this)
-            availableFlutterEngines.add(engine1)
         }
-        Toast.makeText(this, "Took " + (System.currentTimeMillis() - init)/1000F + " seconds to create " + availableFlutterEngines.size + " engines", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            this,
+            "Took " + (System.currentTimeMillis() - init) / 1000F + " seconds to create " + EngineManager.availableFlutterEngines.size + " engines",
+            Toast.LENGTH_LONG
+        ).show()
 
         //Log.d("PerformTest", "First engine time: ${System.currentTimeMillis() - init}")
 
@@ -131,7 +133,8 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
 
         val layoutManager = LinearLayoutManager(this)
         val recyclerView = binding.recyclerView
-        adapter = ListAdapter(this, this, items.toMutableList(), availableFlutterEngines)
+        adapter =
+            ListAdapter(this, this, items.toMutableList(), EngineManager.availableFlutterEngines)
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
 
@@ -141,8 +144,9 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
         layoutManager.onRestoreInstanceState(savedInstanceState?.getParcelable("layoutManager"))
         val previousFlutterCellsArray = savedInstanceState?.getIntegerArrayList("adapter")
         if (previousFlutterCellsArray != null) {
-            adapter.previousFlutterCells = TreeSet(previousFlutterCellsArray)
+            //adapter.previousFlutterCells = TreeSet(previousFlutterCellsArray)
         }
+        recyclerView.isNestedScrollingEnabled = false;
 
 
         /*button4.setOnClickListener {
@@ -175,20 +179,21 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
             "layoutManager",
             binding.recyclerView.layoutManager?.onSaveInstanceState()
         )
-        val previousFlutterCells =
-            (binding.recyclerView.adapter as? ListAdapter)?.previousFlutterCells
-        if (previousFlutterCells != null) {
-            outState.putIntegerArrayList(
-                "adapter",
-                ArrayList(previousFlutterCells)
-            )
-        }
+        /* val previousFlutterCells =
+             (binding.recyclerView.adapter as? ListAdapter)?.previousFlutterCells
+         if (previousFlutterCells != null) {
+             outState.putIntegerArrayList(
+                 "adapter",
+                 ArrayList(previousFlutterCells)
+             )
+         }*/
     }
 
     override fun onDestroy() {
         super.onDestroy()
         //flutterViewEngine.detachActivity()
         //flutterViewEngine.detachFlutterView()
+        EngineManager.detachAllEngines(this)
         DataModel.instance.removeObserver(this)
     }
 
@@ -209,13 +214,14 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
                         "Flutter $i",
                         true,
                         i,
+                        getData(i),
                         null
                     )
                 )
                 isFirst = false
                 count++
             } else {
-                list.add(ListAdapter.Item("Android $i", false, i, null))
+                list.add(ListAdapter.Item("Android $i", false, i, getData(i), null))
             }
         }
         showProgress(false)
@@ -223,7 +229,7 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
         return list
     }
 
-    private fun addEngine(isFirst: Boolean, position: Int): FlutterViewEngine {
+    /*private fun addEngine(isFirst: Boolean, position: Int): FlutterViewEngine {
         val init = System.currentTimeMillis()
         //Log.d("PerformTest", "Begin Creating engine for $position: ${System.currentTimeMillis()}")
         val engine = if (isFirst) FlutterViewEngine(initialEngine) else FlutterViewEngine(
@@ -240,7 +246,7 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
         )
 
         return engine
-    }
+    }*/
 
     override fun onCountUpdate(newCount: Int) {
         TODO("Not yet implemented")
@@ -254,18 +260,6 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
         flutterViewEngine.attachToActivity(this)
     }
 
-    override fun onCreateEngine(position: Int, dartEntrypointName: String): FlutterViewEngine {
-        val engine = flutterEngineGroup.createAndRunEngine(
-            this, DartExecutor.DartEntrypoint(
-                FlutterInjector.instance().flutterLoader().findAppBundlePath(),
-                "showCell"
-            )
-        )
-        val flutterViewEngine = FlutterViewEngine(engine)
-        flutterViewEngine.attachToActivity(this)
-        return flutterViewEngine
-    }
-
     private fun showProgress(show: Boolean) {
         if (show) {
             binding.progressLayout.visibility = View.VISIBLE
@@ -276,5 +270,27 @@ class MainActivity : FlutterViewActivity(), DataModelObserver, EngineBindingsDel
             binding.button.visibility = View.VISIBLE
             binding.recyclerView.visibility = View.VISIBLE
         }
+    }
+
+    private fun getData(position: Int): List<Map<String, Any>> {
+        val list = mutableListOf<Map<String, Any>>()
+        list.clear()
+        if (position % 3 == 0) {
+            imageList.forEachIndexed { index, s ->
+                val map = mutableMapOf<String, Any>()
+                map["image"] = s
+                map["sectionPosition"] = position
+                map["itemPosition"] = index
+                list.add(map)
+            }
+        } else {
+            val map = mutableMapOf<String, Any>()
+            map["image"] = imageList[0]
+            map["sectionPosition"] = position
+            map["itemPosition"] = 0
+            list.add(map)
+        }
+
+        return list
     }
 }

@@ -17,7 +17,7 @@
         tools:layout_editor_absoluteX="162dp"
         tools:layout_editor_absoluteY="428dp" />
 
-    <io.flutter.embedding.android.FlutterView
+    <com.example.fluttertest.MyFlutterView
         android:id="@+id/flutterView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
