@@ -143,7 +143,7 @@ class _CellState extends State<Cell> with WidgetsBindingObserver {
         _random!.nextInt(50) + 205, _random!.nextInt(50) + 205);
   }*/
 
-  /*@override
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       // The Flutter cells will be noticeably different (due to background color
@@ -228,9 +228,9 @@ class _CellState extends State<Cell> with WidgetsBindingObserver {
                           ),
                         ]))),
     );
-  }*/
+  }
 
-  @override
+/*  @override
   Widget build(BuildContext context) {
     int initTime = DateTime.now().millisecondsSinceEpoch;
     Widget widget = MaterialApp(
@@ -297,5 +297,5 @@ class _CellState extends State<Cell> with WidgetsBindingObserver {
     int timeDiff = DateTime.now().millisecondsSinceEpoch - initTime;
     dev.log("Took ${timeDiff}ms to build widget");
     return widget;
-  }
+  }*/
 }

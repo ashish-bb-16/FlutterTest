@@ -1,4 +1,6 @@
 import 'package:bb_flutter/my_navigator_observer.dart';
+import 'package:bb_flutter/video_cell.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +14,7 @@ void main() {
   // This call ensures the Flutter binding has been set up before creating the
   // MethodChannel-based model.
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const Cell());
+  runApp(const MyApp());
 }
 
 /// This is on alternate entrypoint for this module to display Flutter UI in
@@ -22,6 +24,11 @@ void main() {
 @pragma("vm:entry-point")
 void showCell() {
   runApp(const Cell());
+}
+
+@pragma("vm:entry-point")
+void showVideoCell() {
+  runApp(const VideoCell());
 }
 
 class CounterModel extends ChangeNotifier {
@@ -81,7 +88,19 @@ class MyApp extends StatelessWidget {
               // counter didn't reset back to zero; the application is not restarted.
               primarySwatch: Colors.blue,
             ),
-            home: Routing()));
+            home: CachedNetworkImage(
+              imageUrl: "https://images.unsplash.com/photo-1520342868574-5fa3804e551c?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=6ff92caffcdd63681a35134a6770ed3b&auto=format&fit=crop&w=1951&q=80",
+              imageBuilder: (context, imageProvider) => Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.fitWidth,
+                  ),
+                ),
+              ),
+              placeholder: (context, url) => const CircularProgressIndicator(),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            )));
     return MaterialApp(
         //navigatorObservers: [MyNavigatorObserver()],
         title: 'Flutter Demo',

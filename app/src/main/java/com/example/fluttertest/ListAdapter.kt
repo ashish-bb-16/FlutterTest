@@ -96,15 +96,21 @@ class ListAdapter(
 
             //FlutterEngineCache.getInstance().put(position.toString(), item.engine?.engine)
             // This is what makes the Flutter cell start rendering.
+            holder.binding.flutterView.isScrollable = item.data.size > 1
             item.engine?.attachFlutterView(holder.binding.flutterView)
-            Log.d(
-                "ItemTest",
-                "Flutter view engineId: ${holder.binding.flutterView.isAttachedToFlutterEngine} ${holder.binding.flutterView.tag}"
-            )
-            // Tell Flutter which index it's at so Flutter could show the cell number too in its
-            // own widget tree.
             val flutterChannel =
                 MethodChannel(item.engine?.engine?.dartExecutor!!, "my_cell")
+           /* holder.binding.flutterView.layoutManager = LinearLayoutManager(holder.binding.root.context, LinearLayoutManager.HORIZONTAL, false)
+            holder.binding.flutterView.adapter = FlutterViewAdapter(item.engine!!, flutterChannel, item.data)
+            holder.binding.flutterView.isNestedScrollingEnabled = true*/
+            /*Log.d(
+                "ItemTest",
+                "Flutter view engineId: ${holder.binding.flutterView.isAttachedToFlutterEngine} ${holder.binding.flutterView.tag}"
+            )*/
+            // Tell Flutter which index it's at so Flutter could show the cell number too in its
+            // own widget tree.
+            /*val flutterChannel =
+                MethodChannel(item.engine?.engine?.dartExecutor!!, "my_cell")*/
             flutterChannel.invokeMethod("setCellData", item.data)
         } else {
             // If it's not selected as a Flutter cell, just show the Android card.
